@@ -21,6 +21,8 @@
       --mets: #ff6600;
       --yankees: #003087;
       --knicks: #006bb6;
+      --giants: #0b2265;
+      --jets: #125740;
       --success: #00ff88;
       --error: #ff4444;
     }
@@ -34,7 +36,7 @@
       min-height: 100vh; 
       padding: 24px; 
     }
-    .container { max-width: 480px; margin: 0 auto; }
+    .container { max-width: 520px; margin: 0 auto; }
     
     header { 
       display: flex; 
@@ -84,12 +86,12 @@
       50% { opacity: 0.7; }
     }
     
-    .feeds { display: flex; flex-direction: column; gap: 16px; }
+    .feeds { display: flex; flex-direction: column; gap: 14px; }
     
     .feed-card { 
       background: linear-gradient(135deg, var(--bg-card) 0%, rgba(22, 33, 62, 0.8) 100%);
-      border-radius: 20px; 
-      padding: 20px;
+      border-radius: 16px; 
+      padding: 18px;
       border: 1px solid rgba(255,255,255,0.04);
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
@@ -109,6 +111,8 @@
     .feed-card.mets::before { background: var(--mets); }
     .feed-card.yankees::before { background: var(--yankees); }
     .feed-card.knicks::before { background: var(--knicks); }
+    .feed-card.giants::before { background: var(--giants); }
+    .feed-card.jets::before { background: var(--jets); }
     
     .feed-card:hover {
       transform: translateY(-2px);
@@ -120,41 +124,44 @@
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      margin-bottom: 16px; 
+      margin-bottom: 14px; 
     }
     .feed-title { 
       font-weight: 700; 
-      font-size: 1.1rem; 
+      font-size: 1rem; 
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .team-logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 10px;
+      font-weight: 700;
     }
     .mets .team-logo { background: var(--mets); }
     .yankees .team-logo { background: var(--yankees); }
     .knicks .team-logo { background: var(--knicks); }
+    .giants .team-logo { background: var(--giants); }
+    .jets .team-logo { background: var(--jets); }
     
     .feed-time { 
-      font-size: 0.75rem; 
+      font-size: 0.7rem; 
       color: var(--text-muted); 
     }
     .feed-content { 
-      font-size: 0.9rem; 
-      line-height: 1.6; 
+      font-size: 0.85rem; 
+      line-height: 1.5; 
     }
     .feed-content ul { 
       list-style: none; 
     }
     .feed-content li { 
-      padding: 8px 0;
+      padding: 6px 0;
       color: var(--text-secondary);
       border-bottom: 1px solid rgba(255,255,255,0.04);
       display: flex;
@@ -165,8 +172,8 @@
     .feed-content li::before {
       content: '●';
       color: var(--accent);
-      font-size: 6px;
-      margin-top: 7px;
+      font-size: 5px;
+      margin-top: 6px;
       flex-shrink: 0;
     }
     .feed-content li.new::before {
@@ -177,21 +184,21 @@
       background: rgba(255, 68, 68, 0.1);
       border: 1px solid rgba(255, 68, 68, 0.2);
       color: var(--error);
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 0.85rem;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
     }
     
     .loading-placeholder {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .loading-placeholder div {
-      height: 14px;
+      height: 12px;
       background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%);
       background-size: 200% 100%;
-      border-radius: 4px;
+      border-radius: 3px;
       animation: shimmer 1.5s infinite;
     }
     .loading-placeholder div:nth-child(1) { width: 90%; }
@@ -207,8 +214,8 @@
     .last-updated { 
       text-align: center; 
       color: var(--text-muted); 
-      font-size: 0.75rem; 
-      margin-top: 24px; 
+      font-size: 0.7rem; 
+      margin-top: 20px; 
     }
     
     .status-badge {
@@ -309,6 +316,34 @@
           </div>
         </div>
       </div>
+      
+      <div class="feed-card giants">
+        <div class="feed-header">
+          <span class="feed-title">
+            <span class="team-logo">NYG</span>
+            NY Giants
+          </span>
+        </div>
+        <div class="feed-content" id="giants">
+          <div class="loading-placeholder">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="feed-card jets">
+        <div class="feed-header">
+          <span class="feed-title">
+            <span class="team-logo">NYJ</span>
+            NY Jets
+          </span>
+        </div>
+        <div class="feed-content" id="jets">
+          <div class="loading-placeholder">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="last-updated" id="lastUpdated"></div>
@@ -325,7 +360,9 @@
     const FEEDS = [
       { id: 'mets', name: 'NY Mets', url: 'https://www.espn.com/mlb/team/_/name/nym/new-york-mets' },
       { id: 'yankees', name: 'NY Yankees', url: 'https://www.espn.com/mlb/team/_/name/nyy/new-york-yankees' },
-      { id: 'knicks', name: 'NY Knicks', url: 'https://www.espn.com/nba/team/_/name/ny/new-york-knicks' }
+      { id: 'knicks', name: 'NY Knicks', url: 'https://www.espn.com/nba/team/_/name/ny/new-york-knicks' },
+      { id: 'giants', name: 'NY Giants', url: 'https://www.espn.com/nfl/team/_/name/nyg/new-york-giants' },
+      { id: 'jets', name: 'NY Jets', url: 'https://www.espn.com/nfl/team/_/name/nyj/new-york-jets' }
     ];
     
     function showLoading(show) {
@@ -365,7 +402,7 @@
         return parseFeed(feed.id, data.data.markdown);
       } catch (err) {
         if (err.name === 'AbortError') {
-          return '<div class="error">⏱️ Request timed out. Try again.</div>';
+          return '<div class="error">⏱️ Request timed out</div>';
         }
         return `<div class="error">⚠️ ${err.message}</div>`;
       }
@@ -378,14 +415,14 @@
       for (const line of lines) {
         if (line.includes('**') && (line.includes('-') || line.includes('h'))) {
           const match = line.match(/\*\*([^*]+)\*\*/);
-          if (match && headlines.length < 5) {
+          if (match && headlines.length < 4) {
             headlines.push(match[1].trim());
           }
         }
       }
       
       if (headlines.length === 0) {
-        return '<ul><li>No headlines found</li></ul>';
+        return '<ul><li>No headlines</li></ul>';
       }
       
       return '<ul>' + headlines.map((h, i) => 
@@ -417,7 +454,6 @@
       }
     }
     
-    // Auto-refresh on load
     refreshAll();
   </script>
 </body>
