@@ -4,65 +4,310 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NY Sports Feed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    h1 { font-size: 1.5rem; color: #00d4ff; }
-    .refresh-btn { background: #00d4ff; color: #1a1a2e; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .refresh-btn:hover { background: #00b8e6; transform: scale(1.02); }
-    .refresh-btn:disabled { background: #555; cursor: not-allowed; }
-    .refresh-btn.loading { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .feeds { display: flex; flex-direction: column; gap: 15px; }
-    .feed-card { background: #16213e; border-radius: 12px; padding: 16px; border-left: 4px solid #00d4ff; }
-    .feed-card.mets { border-left-color: #ff6600; }
-    .feed-card.yankees { border-left-color: #003087; }
-    .feed-card.knicks { border-left-color: #006bb6; }
-    .feed-card.giants { border-left-color: #0b2265; }
-    .feed-card.jets { border-left-color: #125740; }
-    .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .feed-title { font-weight: 700; font-size: 1.1rem; }
-    .feed-time { font-size: 0.75rem; color: #888; }
-    .feed-content { font-size: 0.9rem; line-height: 1.5; }
-    .feed-content h3 { color: #00d4ff; margin-bottom: 8px; font-size: 1rem; }
-    .feed-content ul { list-style: none; }
-    .feed-content li { padding: 4px 0; color: #ccc; }
-    .error { background: #3d1a1a; border-left-color: #ff4444; padding: 16px; border-radius: 12px; }
-    .last-updated { text-align: center; color: #666; font-size: 0.8rem; margin-top: 20px; }
-    .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    :root {
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a2e;
+      --bg-card: #16213e;
+      --accent: #00d4ff;
+      --accent-glow: rgba(0, 212, 255, 0.3);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #666680;
+      --mets: #ff6600;
+      --yankees: #003087;
+      --knicks: #006bb6;
+      --success: #00ff88;
+      --error: #ff4444;
+    }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      background: var(--bg-primary);
+      background-image: 
+        radial-gradient(ellipse at top, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(255, 102, 0, 0.05) 0%, transparent 40%);
+      color: var(--text-primary); 
+      min-height: 100vh; 
+      padding: 24px; 
+    }
+    .container { max-width: 480px; margin: 0 auto; }
+    
+    header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    h1 { 
+      font-size: 1.4rem; 
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .refresh-btn { 
+      background: linear-gradient(135deg, var(--accent) 0%, #00b8e6 100%);
+      color: #0f0f23; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      font-size: 0.9rem;
+      cursor: pointer; 
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px var(--accent-glow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .refresh-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px var(--accent-glow);
+    }
+    .refresh-btn:disabled { 
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .refresh-btn.loading { 
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .feeds { display: flex; flex-direction: column; gap: 16px; }
+    
+    .feed-card { 
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(22, 33, 62, 0.8) 100%);
+      border-radius: 20px; 
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .feed-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0.8;
+    }
+    .feed-card.mets::before { background: var(--mets); }
+    .feed-card.yankees::before { background: var(--yankees); }
+    .feed-card.knicks::before { background: var(--knicks); }
+    
+    .feed-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.1);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .feed-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 16px; 
+    }
+    .feed-title { 
+      font-weight: 700; 
+      font-size: 1.1rem; 
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .team-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .mets .team-logo { background: var(--mets); }
+    .yankees .team-logo { background: var(--yankees); }
+    .knicks .team-logo { background: var(--knicks); }
+    
+    .feed-time { 
+      font-size: 0.75rem; 
+      color: var(--text-muted); 
+    }
+    .feed-content { 
+      font-size: 0.9rem; 
+      line-height: 1.6; 
+    }
+    .feed-content ul { 
+      list-style: none; 
+    }
+    .feed-content li { 
+      padding: 8px 0;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .feed-content li:last-child { border-bottom: none; }
+    .feed-content li::before {
+      content: '●';
+      color: var(--accent);
+      font-size: 6px;
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+    .feed-content li.new::before {
+      color: var(--success);
+    }
+    
+    .error { 
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.2);
+      color: var(--error);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+    
+    .loading-placeholder {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .loading-placeholder div {
+      height: 14px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%);
+      background-size: 200% 100%;
+      border-radius: 4px;
+      animation: shimmer 1.5s infinite;
+    }
+    .loading-placeholder div:nth-child(1) { width: 90%; }
+    .loading-placeholder div:nth-child(2) { width: 75%; }
+    .loading-placeholder div:nth-child(3) { width: 85%; }
+    .loading-placeholder div:nth-child(4) { width: 60%; }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .last-updated { 
+      text-align: center; 
+      color: var(--text-muted); 
+      font-size: 0.75rem; 
+      margin-top: 24px; 
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--success);
+    }
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    
+    .loading-overlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0; 
+      background: rgba(15, 15, 35, 0.9);
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 100;
+      backdrop-filter: blur(5px);
+    }
     .loading-overlay.hidden { display: none; }
-    .spinner { width: 40px; height: 40px; border: 3px solid #333; border-top-color: #00d4ff; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🏈 Sports Feeds</h1>
-      <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh</button>
+      <div>
+        <h1>NY Sports</h1>
+        <span class="status-badge">Live</span>
+      </div>
+      <button class="refresh-btn" onclick="refreshAll()">
+        <span>🔄</span> Refresh
+      </button>
     </header>
     
     <div class="feeds" id="feeds">
       <div class="feed-card mets">
         <div class="feed-header">
-          <span class="feed-title">🟦 NY Mets</span>
+          <span class="feed-title">
+            <span class="team-logo">NYM</span>
+            NY Mets
+          </span>
         </div>
-        <div class="feed-content" id="mets">Click refresh to load...</div>
+        <div class="feed-content" id="mets">
+          <div class="loading-placeholder">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
       </div>
       
       <div class="feed-card yankees">
         <div class="feed-header">
-          <span class="feed-title">🔵 NY Yankees</span>
+          <span class="feed-title">
+            <span class="team-logo">NYY</span>
+            NY Yankees
+          </span>
         </div>
-        <div class="feed-content" id="yankees">Click refresh to load...</div>
+        <div class="feed-content" id="yankees">
+          <div class="loading-placeholder">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
       </div>
       
       <div class="feed-card knicks">
         <div class="feed-header">
-          <span class="feed-title">🟠 NY Knicks</span>
+          <span class="feed-title">
+            <span class="team-logo">NYK</span>
+            NY Knicks
+          </span>
         </div>
-        <div class="feed-content" id="knicks">Click refresh to load...</div>
+        <div class="feed-content" id="knicks">
+          <div class="loading-placeholder">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -70,7 +315,7 @@
   </div>
   
   <div class="loading-overlay hidden" id="loading">
-    <div class="spinner"></div>
+    <div class="loader"></div>
   </div>
 
   <script>
@@ -108,24 +353,21 @@
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(`HTTP ${response.status}`);
         }
         
         const data = await response.json();
         
         if (!data.success) {
-          throw new Error(data.error || 'Unknown error from Firecrawl');
+          throw new Error(data.error || 'Unknown error');
         }
         
         return parseFeed(feed.id, data.data.markdown);
       } catch (err) {
         if (err.name === 'AbortError') {
-          return '<div class="error">Request timed out. Try again.</div>';
+          return '<div class="error">⏱️ Request timed out. Try again.</div>';
         }
-        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-          return '<div class="error">CORS/Network error: This may be a browser security issue. Try running locally or check console.</div>';
-        }
-        return `<div class="error">Error: ${err.message}</div>`;
+        return `<div class="error">⚠️ ${err.message}</div>`;
       }
     }
     
@@ -146,7 +388,9 @@
         return '<ul><li>No headlines found</li></ul>';
       }
       
-      return '<ul>' + headlines.map(h => `<li>• ${h}</li>`).join('') + '</ul>';
+      return '<ul>' + headlines.map((h, i) => 
+        `<li class="${i === 0 ? 'new' : ''}">${h}</li>`
+      ).join('') + '</ul>';
     }
     
     async function refreshAll() {
@@ -163,15 +407,18 @@
         });
         
         document.getElementById('lastUpdated').textContent = 
-          'Last updated: ' + new Date().toLocaleTimeString();
+          'Updated ' + new Date().toLocaleTimeString();
       } catch (err) {
-        alert('Error refreshing feeds: ' + err.message);
+        alert('Error: ' + err.message);
       } finally {
         btn.disabled = false;
         btn.classList.remove('loading');
         showLoading(false);
       }
     }
+    
+    // Auto-refresh on load
+    refreshAll();
   </script>
 </body>
 </html>
