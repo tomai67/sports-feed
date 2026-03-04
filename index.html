@@ -39,7 +39,7 @@
 <body>
   <div class="container">
     <header>
-      <h1>� Sports Feeds</h1>
+      <h1>🏈 Sports Feeds</h1>
       <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh</button>
     </header>
     
@@ -89,6 +89,9 @@
     
     async function fetchFeed(feed) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        
         const response = await fetch(PROXY_URL, {
           method: 'POST',
           headers: {
@@ -98,32 +101,39 @@
           body: JSON.stringify({
             url: feed.url,
             formats: ['markdown']
-          })
+          }),
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
         
         if (!data.success) {
-          throw new Error(data.error || 'Unknown error');
+          throw new Error(data.error || 'Unknown error from Firecrawl');
         }
         
         return parseFeed(feed.id, data.data.markdown);
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return '<div class="error">Request timed out. Try again.</div>';
+        }
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          return '<div class="error">CORS/Network error: This may be a browser security issue. Try running locally or check console.</div>';
+        }
         return `<div class="error">Error: ${err.message}</div>`;
       }
     }
     
     function parseFeed(id, markdown) {
-      // Extract headlines - look for **bold text** patterns
       const headlines = [];
       const lines = markdown.split('\n');
       
       for (const line of lines) {
-        // Match lines with **headlines** or links
         if (line.includes('**') && (line.includes('-') || line.includes('h'))) {
           const match = line.match(/\*\*([^*]+)\*\*/);
           if (match && headlines.length < 5) {
@@ -153,7 +163,7 @@
         });
         
         document.getElementById('lastUpdated').textContent = 
-          `Last updated: ${new Date().toLocaleTimeString()}`;
+          'Last updated: ' + new Date().toLocaleTimeString();
       } catch (err) {
         alert('Error refreshing feeds: ' + err.message);
       } finally {
@@ -162,9 +172,6 @@
         showLoading(false);
       }
     }
-    
-    // Auto-refresh on load
-    refreshAll();
   </script>
 </body>
 </html>
